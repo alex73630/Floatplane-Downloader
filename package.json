@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "feedparser": "^2.2.0",
     "request": "^2.81.0",
     "sleep": "^5.1.1"
   }

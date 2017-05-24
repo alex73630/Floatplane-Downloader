@@ -2,7 +2,6 @@
 var request = require('request');
 var fs = require('fs');
 var cheerio = require('cheerio');
-var FeedParser = require('feedparser');
 var sleep = require('sleep');
 var config = require('./config.json');
 
