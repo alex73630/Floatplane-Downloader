@@ -1,5 +1,9 @@
 {
 	"auth": "", /* Put your username here */
 	"password": "", /* Put your password here */
-	"videoQuality":"360/480/720/1080/4k" /* Choose the quality that you want to download (4k could not work) */
+	"videoQuality": "360/480/720/1080/4k", /* Choose the quality that you want to download (4k could not work) */
+	"plexFolder": "/home/plex/medias/floaplaneclub/",
+	"lttFolderName": "Linus Tech Tips/",
+	"tqFolderName": "Techquickie/",
+	"csfFolderName": "Channel Super Fun/"
 }

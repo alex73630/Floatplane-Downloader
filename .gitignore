@@ -1,3 +1,5 @@
 node_modules/
+plexTestDownload/
 config.json
-*.sample.txt
+*.sample.*
+*.back.*
