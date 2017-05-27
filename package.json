@@ -9,7 +9,11 @@
   "author": "alex73630",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.4.1",
     "cheerio": "^0.22.0",
+    "ffmpeg-static": "^2.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "progress": "^2.0.0",
     "request": "^2.81.0",
     "sleep": "^5.1.1"
   }

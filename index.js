@@ -1,9 +1,16 @@
 // Config
 var request = require('request');
+var ProgressBar = require('progress');
 var fs = require('fs');
 var cheerio = require('cheerio');
 var sleep = require('sleep');
 var https = require('https');
+var async = require('async');
+
+var ffmpegStatic = require('ffmpeg-static');
+var exec = require('child_process').exec;
+process.env.FMPEG_PATH = ffmpegStatic.path;
+
 var config = require('./config.json');
 
 // Create cookie container
@@ -69,7 +76,7 @@ function getFloatplanePage() {
 			var linksAndTitles = []
 
 			// List 24 last posts
-			for (let i = 1; i < 25; i++) {
+			for (let i = 1; i < 10; i++) {
 				setTimeout(function() {
 					console.log('Start requesting:', postTitleContainer[i].attribs.href);
 					request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
@@ -89,7 +96,7 @@ function getFloatplanePage() {
 						parsedType = parsingType();
 
 						regTitle = new RegExp(/(?: ).+/);
-						parsedTitle = regTitle.exec(title)[0].slice(1);
+						parsedTitle = regTitle.exec(title)[0].slice(1,-1);
 
 						postURL = postTitleContainer[i].attribs.href;
 
@@ -171,24 +178,60 @@ function downloadVideos() {
 	var jsonReg = new RegExp(/(.json)/);
 	jsonNewDir = 'json/new/';
 	jsonCompletedDir = 'json/completed/'
+	console.log('function downloadVideos() called!');
 	fs.readdir(jsonNewDir, function(err, files){
-		files.forEach(function(file){
+		console.log(files);
+		async.eachSeries(files, function(file,callback){
 			if (jsonReg.test(file) === true) {
-				console.log(file,'is a json');
 				fileJson = JSON.parse(fs.readFileSync(jsonNewDir + file));
-				console.log(file,'download url:',fileJson.dlURL);
 
 				parsedTypeForTitle = parseTypeForTitle(fileJson.type);
 				videoTypeFolder = videoTypeFolderFun(fileJson.type);
 
 				request(fileJson.dlURL)
 				.on('response', function (res) {
-					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.date + ' - ' + fileJson.title + '.mp4'))
+					console.log(parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '.mp4')
+   				len = parseInt(res.headers['content-length'], 10);
+					bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
+						complete: '=',
+						incomplete: ' ',
+						width: 30,
+						total: len
+					})
+
+					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4'))
 				})
-				.on('finish', function(){fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);});
+				.on('data', function(chunk) {
+					bar.tick(chunk.length);
+				})
+				.on('end', function(){
+    			console.log('\n');
+					createdDate = fileJson.date + 'T00:00:00';
+					metadata = {
+						title: fileJson.title,
+						show: parsedTypeForTitle,
+						creation_time: createdDate
+					}
+					cmd = '"' + ffmpegStatic.path + '"';
+					args = ' -i "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4" ' + ' -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '.mp4"'
+					exec(cmd + args , function(error,stdout,stderr){
+						if (error) {
+							console.log('ffmpegError:',error);
+						}
+						fs.unlinkSync(config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4')
+					})
+					fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);
+					callback();
+				});
+			} else {
+				callback();
 			}
+		}, function(err){
+			if(err){console.error('async',err)}
+			console.log('function downloadVideos() finished!');
 		})
-	})
+	}
+)
 };
 
 /* SIDENOTE
@@ -199,7 +242,7 @@ This should make the code easier to understand and to work with (and fix some is
 A Git repo would be a great idea.
 
 Steps to do:
-- Add more parsing for title/content
+- Add more parsing for title/content (Question marks and " can't be used as filename, at least on Win)
 - Find a way to save cookies so we don't have to login each time we launch the app (2 GET and 1 POST less)
 - Download system ?
 - Do some test with a test Plex server
