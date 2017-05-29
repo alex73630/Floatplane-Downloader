@@ -199,7 +199,7 @@ function downloadVideos() {
 						total: len
 					})
 
-					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4'))
+					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + '\ -\ ' + fileJson.title + '\ -\ ' + fileJson.date + '\ -\ TEST.mp4'))
 				})
 				.on('data', function(chunk) {
 					bar.tick(chunk.length);
@@ -213,7 +213,7 @@ function downloadVideos() {
 						creation_time: createdDate
 					}
 					cmd = '"' + ffmpegStatic.path + '"';
-					args = ' -i "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4" ' + ' -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '.mp4"'
+					args = ' -i "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + '\ -\ ' + fileJson.title + '\ -\ ' + fileJson.date + '\ -\ TEST.mp4" ' + ' -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '.mp4"'
 					exec(cmd + args , function(error,stdout,stderr){
 						if (error) {
 							console.log('ffmpegError:',error);
