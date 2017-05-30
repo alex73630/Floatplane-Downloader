@@ -3,7 +3,7 @@
 
 Floatplane-Downloader is a NodeJS script that allows you to download latest *Linus Media Group*'s *Floatplane Club* videos from *LinusTechTips* forums and make them available through a Plex server.
 
-###IMPORTANT NOTES
+### IMPORTANT NOTES
 This is an **early alpha** script delivered as it is. At this state, I only recommend it to **advanced users** that knows a bit of NodeJS and command-line tools. I am **not responsible** of any damages or issues that this program could do.
 
 Also, I and this program are **not affiliated in anyway** with *Linus Media Group* and this program have **not yet received** any kind of **endorsement or validation** from *Linus Media Group* team.
@@ -22,7 +22,7 @@ Requirements
 Installing
 -------
 
-See [Install](documentation/install) page for instructions.
+See [Install](documentation/Install.md) page for instructions.
 
 Officially supported use cases
 ------------------------------

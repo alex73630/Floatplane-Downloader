@@ -77,7 +77,7 @@ After having installed and configured the script, you can run it with this comma
 
 The script will now start fetching new videos and downloading them.
 
-Next step, [configure Plex](Configure-Plex)!
+Next step, [configure Plex](Configure-Plex.md)!
 
 
 #### Linux
@@ -149,7 +149,7 @@ Here is some hints to understand what to put in this file:
  **videoQuality** : Pretty self-explained here, you just choose what quality you want to download your video. Values that you can use are **"360"**, **"480"**, **"720"**, **"1080"** and **"4k"** (4k could not work as it's not displayed on most posts, be aware that there is no fallback to a lower quality in case of unavailability at this time)
 
  **plexFolder** : Write the **full path** to your Plex Library folder, remember to create a dedicated folder for *Floatplane Club* as shown in the example.
- 
+
  **ltt/tq/csf FolderName** : Those three values are for each channels, you have to create those three sub folders in the *Floatplane Club* folder you created just before.
 
 **Make sure** that folders are **created** and named **exactly** as the config file.
@@ -163,4 +163,4 @@ After having installed and configured the script, you can run it with this comma
 
 The script will now start fetching new videos and downloading them.
 
-Next step, [configure Plex](Configure-Plex)!
+Next step, [configure Plex](Configure-Plex.md)!
