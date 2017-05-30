@@ -122,7 +122,7 @@ function getFloatplanePage() {
 
 						linksAndTitles[i] = {
 							postID:i,
-							title:parsedTitleForFile,
+							title:parsedTitle,
 							type:parsedType, // If it's a LTT or CSF or TQ video
 							filename:fileName,
 							filenameTest:fileNameTest,
