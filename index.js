@@ -104,19 +104,28 @@ function getFloatplanePage() {
 						regDate = new RegExp(/\d+-\d+-\d+/);
 						parsedDate = regDate.exec(dateTime)[0];
 
+						parsedTypeForTitle = parseTypeForTitle(parsedType);
+						bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
+						parsedTitleForFile = parsedTitle.replace(bannedFilenameChars, '');
+
+						fileName = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + '.mp4'
+						fileNameTest = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + ' - TEST.mp4'
+
 						console.log('---------------------');
 						console.log('error:', error); // Print the error if one occurred
 						console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
 						console.log('*********');
 						console.log('videoID:',videoID);
 						console.log('type:',parsedType);
-						console.log('title:',parsedTitle);
+						console.log('title:',parsedTitleForFile);
 						console.log('date:',parsedDate);
 
 						linksAndTitles[i] = {
 							postID:i,
-							title:parsedTitle,
+							title:parsedTitleForFile,
 							type:parsedType, // If it's a LTT or CSF or TQ video
+							filename:fileName,
+							filenameTest:fileNameTest,
 							serie:'Scrapyard Wars',
 							season: 5,
 							episode: 3,
@@ -178,19 +187,18 @@ function downloadVideos() {
 	var jsonReg = new RegExp(/(.json)/);
 	jsonNewDir = 'json/new/';
 	jsonCompletedDir = 'json/completed/'
+	jsonFailedDir = 'json/failed/'
 	console.log('function downloadVideos() called!');
 	fs.readdir(jsonNewDir, function(err, files){
 		console.log(files);
 		async.eachSeries(files, function(file,callback){
 			if (jsonReg.test(file) === true) {
 				fileJson = JSON.parse(fs.readFileSync(jsonNewDir + file));
-
-				parsedTypeForTitle = parseTypeForTitle(fileJson.type);
 				videoTypeFolder = videoTypeFolderFun(fileJson.type);
 
 				request(fileJson.dlURL)
 				.on('response', function (res) {
-					console.log(parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '\\ -\\ TEST.mp4')
+					console.log(fileJson.filenameTest)
    				len = parseInt(res.headers['content-length'], 10);
 					bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
 						complete: '=',
@@ -199,7 +207,8 @@ function downloadVideos() {
 						total: len
 					})
 
-					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + '\\ -\\ ' + fileJson.title + '\\ -\\ ' + fileJson.date + '\\ -\\ TEST.mp4'))
+					// res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + ' - TEST.mp4'))
+					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + fileJson.filenameTest))
 				})
 				.on('data', function(chunk) {
 					bar.tick(chunk.length);
@@ -213,15 +222,21 @@ function downloadVideos() {
 						creation_time: createdDate
 					}
 					cmd = '"' + ffmpegStatic.path + '"';
-					args = ' -i "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + '\\ -\\ ' + fileJson.title + '\\ -\\ ' + fileJson.date + '\\ -\\ TEST.mp4" ' + ' -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + parsedTypeForTitle + ' - ' + fileJson.title + ' - ' + fileJson.date + '.mp4"'
+					args = ' -i "' + config.plexFolder + videoTypeFolder + fileJson.filenameTest + '" -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + fileJson.filename + '"';
 					exec(cmd + args , function(error,stdout,stderr){
 						if (error) {
 							console.log('ffmpegError:',error);
+							fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest)
+							fs.renameSync(jsonNewDir + file, jsonFailedDir + file);
+							callback();
 						}
-						fs.unlinkSync(config.plexFolder + videoTypeFolder + parsedTypeForTitle + '\\ -\\ ' + fileJson.title + '\\ -\\ ' + fileJson.date + '\\ -\\ TEST.mp4')
+						else {
+							console.log('ffmpegSuccess for file:',fileJson.filename)
+							fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest)
+							fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);
+							callback();
+						}
 					})
-					fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);
-					callback();
 				});
 			} else {
 				callback();
