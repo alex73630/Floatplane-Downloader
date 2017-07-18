@@ -94,6 +94,11 @@ function getFloatplanePage() {
 						// Get all values and save them in a json
 						videoID = $('.floatplane-script').data('videoGuid'); // VideoID value
 
+						// Video Title
+						title = postTitleContainer[i].attribs.title;
+						regTitle = new RegExp(/(?: ).+/);
+						parsedTitle = regTitle.exec(title)[0].slice(1,-1);
+
 						// Video Type
 						regType = new RegExp(/\w+(?=:)/);
 						function parsingType(){
@@ -102,11 +107,6 @@ function getFloatplanePage() {
 								return regType.exec(title)[0];
 							}}
 						parsedType = parsingType();
-
-						// Video Title
-						title = postTitleContainer[i].attribs.title;
-						regTitle = new RegExp(/(?: ).+/);
-						parsedTitle = regTitle.exec(title)[0].slice(1,-1);
 
 						// Post URL
 						postURL = postTitleContainer[i].attribs.href;
