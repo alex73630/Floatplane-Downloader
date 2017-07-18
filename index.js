@@ -17,12 +17,12 @@ var config = require('./config.json');
 var cookiejar = request.jar();
 
 // Set forum login url
-var loginURL = "https://linustechtips.com/main/login/"
+var loginURL = 'https://linustechtips.com/main/login/';
 
 // Do a first get so we have some values/cookies required to login
 request({url: loginURL,jar: cookiejar}, function (error, response, body) {
 	// Do some log
-	console.log('First login, grabing cookies and csrfKey...')
+	console.log('First login, grabing cookies and csrfKey...');
 	console.log('error:', error);
 	console.log('statusCode:', response && response.statusCode);
 
@@ -33,28 +33,29 @@ request({url: loginURL,jar: cookiejar}, function (error, response, body) {
 
 	// Start login
 	request.post({
-	  headers: {'content-type' : 'application/x-www-form-urlencoded'},
+		headers: {'content-type' : 'application/x-www-form-urlencoded'},
 		url: loginURL,
 		jar: cookiejar,
-		form: {login__standard_submitted: '1',
-						csrfKey: csrfKeyInput,
-						auth: config.auth,
-						password: config.password,
-						remember_me: '0',
-						remember_me_checkbox: '1',
-						signin_anonymous: '0'
-					}
+		form: {
+			login__standard_submitted: '1',
+			csrfKey: csrfKeyInput,
+			auth: config.auth,
+			password: config.password,
+			remember_me: '0',
+			remember_me_checkbox: '1',
+			signin_anonymous: '0'
+		}
 	}, function(error, response, body){
-			console.log('error:', error);
-			console.log('statusCode:', response && response.statusCode);
+		console.log('error:', error);
+		console.log('statusCode:', response && response.statusCode);
 
-			// GET FLOATPLANE CLUB FIRST PAGE HERE
-			getFloatplanePage();
+		// GET FLOATPLANE CLUB FIRST PAGE HERE
+		getFloatplanePage();
+	});
 });
-})
 
 // Var to store forum page
-var floatplanePage
+var floatplanePage;
 // Set interval between post requests
 var interval = 1 * 500;
 
@@ -81,8 +82,7 @@ function getFloatplanePage() {
 			var postTimeContainer = postTitles.children('div').children('time');
 
 			// Create an array to store post infos before saving them in json files
-			var linksAndTitles = []
-
+			var linksAndTitles = [];
 			// Get and list 9 last posts
 			for (let i = 1; i < 10; i++) {
 				setTimeout(function() {
@@ -102,7 +102,9 @@ function getFloatplanePage() {
 						// Video Type
 						regType = new RegExp(/\w+(?=:)/);
 						function parsingType(){
-							if (regType.exec(title) === null || regType.exec(title) === undefined){return 'Unknown'}
+							if (regType.exec(title) === null || regType.exec(title) === undefined){
+								return 'Unknown';
+							}
 							else {
 								return regType.exec(title)[0];
 							}}
@@ -122,8 +124,8 @@ function getFloatplanePage() {
 						parsedTitleForFile = parsedTitle.replace(bannedFilenameChars, '');
 
 						// Filenames (final and temp.)
-						fileName = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + '.mp4'
-						fileNameTest = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + ' - TEST.mp4'
+						fileName = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + '.mp4';
+						fileNameTest = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + ' - TEST.mp4';
 
 						// Loging values to debug
 						console.log('---------------------');
@@ -149,7 +151,7 @@ function getFloatplanePage() {
 							date:parsedDate, // Release date
 							videoID:videoID, // Video ID
 							dlURL:'' // Video download URL
-						}
+						};
 
 						// Check if the post contains a video, create a json file
 						if (videoID !== undefined && parsedType !== 'Unknown') {
@@ -168,14 +170,14 @@ function getFloatplanePage() {
 								request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
 									linksAndTitles[i].dlURL = body;
 									fs.writeFileSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json', JSON.stringify(linksAndTitles[i]));
-								})
+								});
 							}
 							else {
 								// True: We do nothing as the file is already created
 								console.log(linksAndTitles[i].videoID,'File exist!');
 							}
 						}
-					})
+					});
 				}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
 			}
 			// Wait 30s and start downloading videos
@@ -190,21 +192,21 @@ function getFloatplanePage() {
 // Functions to parse type values to get corresponding ones
 
 function parseTypeForTitle(type){
-	if (type == "LTT") {
-		return "Linus Tech Tips"
-	} else if (type == "CSF") {
-		return "Channel Super Fun"
-	} else if (type == "TQ") {
-		return "Techquickie"
+	if (type == 'LTT') {
+		return 'Linus Tech Tips';
+	} else if (type == 'CSF') {
+		return 'Channel Super Fun';
+	} else if (type == 'TQ') {
+		return 'Techquickie';
 	}
 }
 function videoTypeFolderFun(type) {
-	if (type == "LTT") {
-		return config.lttFolderName
-	} else if (type == "CSF") {
-		return config.csfFolderName
-	} else if (type == "TQ") {
-		return config.tqFolderName
+	if (type == 'LTT') {
+		return config.lttFolderName;
+	} else if (type == 'CSF') {
+		return config.csfFolderName;
+	} else if (type == 'TQ') {
+		return config.tqFolderName;
 	}
 }
 
@@ -214,8 +216,8 @@ function downloadVideos() {
 	var jsonReg = new RegExp(/(.json)/);
 	// json folders
 	jsonNewDir = 'json/new/';
-	jsonCompletedDir = 'json/completed/'
-	jsonFailedDir = 'json/failed/'
+	jsonCompletedDir = 'json/completed/';
+	jsonFailedDir = 'json/failed/';
 
 
 	console.log('function downloadVideos() called!');
@@ -237,64 +239,64 @@ function downloadVideos() {
 
 				// Start downloading file
 				request(fileJson.dlURL)
-				.on('response', function (res) {
-					console.log(fileJson.filenameTest)
-					// Create a ProgressBar to know download status
-   				len = parseInt(res.headers['content-length'], 10);
-					bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
-						complete: '=',
-						incomplete: ' ',
-						width: 30,
-						total: len
-					})
+					.on('response', function (res) {
+						console.log(fileJson.filenameTest);
+						// Create a ProgressBar to know download status
+						len = parseInt(res.headers['content-length'], 10);
+						bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
+							complete: '=',
+							incomplete: ' ',
+							width: 30,
+							total: len
+						});
 
-					// Write the incoming flux into an intermediary file
-					res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + fileJson.filenameTest))
-				})
+						// Write the incoming flux into an intermediary file
+						res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + fileJson.filenameTest));
+					})
 
 				// When receving data, make ProgressBar... Progress...
-				.on('data', function(chunk) {
-					bar.tick(chunk.length);
-				})
+					.on('data', function(chunk) {
+						bar.tick(chunk.length);
+					})
 
 				// When file finished to download
-				.on('end', function(){
-    			console.log('\n');
-					createdDate = fileJson.date + 'T00:00:00';
+					.on('end', function(){
+						console.log('\n');
+						createdDate = fileJson.date + 'T00:00:00';
 
-					// Create a metadata object containing important metadatas
-					metadata = {
-						title: fileJson.title,
-						show: parsedTypeForTitle,
-						creation_time: createdDate
-					}
+						// Create a metadata object containing important metadatas
+						metadata = {
+							title: fileJson.title,
+							show: parsedTypeForTitle,
+							creation_time: createdDate
+						};
 
-					// Set ffmpeg path and arguments then launch it.
-					cmd = '"' + ffmpegStatic.path + '"';
-					args = ' -i "' + config.plexFolder + videoTypeFolder + fileJson.filenameTest + '" -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + fileJson.filename + '"';
-					exec(cmd + args , function(error,stdout,stderr){
-						if (error) {
-							// Error while adding metadatas
-							console.log('ffmpegError:',error);
-							// Delete temporary file
-							fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest);
-							// Move "new" json to "failed" json folder
-							fs.renameSync(jsonNewDir + file, jsonFailedDir + file);
-							// Send callback to take care of the next json file
-							callback();
-						}
-						else {
-							// Finished to add metadatas
-							console.log('ffmpegSuccess for file:',fileJson.filename);
-							// Delete temporary file
-							fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest);
-							// Move "new" json to "completed" json folder
-							fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);
-							// Send callback to take care of the next json file
-							callback();
-						}
-					})
-				});
+						// Set ffmpeg path and arguments then launch it.
+						cmd = '"' + ffmpegStatic.path + '"';
+						args = ' -i "' + config.plexFolder + videoTypeFolder + fileJson.filenameTest + '" -y -acodec copy -vcodec copy -metadata title="' + fileJson.title + '" -metadata show="' + parsedTypeForTitle + '" "' + config.plexFolder + videoTypeFolder + fileJson.filename + '"';
+						exec(cmd + args , function(error,stdout,stderr){
+							if (error) {
+								// Error while adding metadatas
+								console.log('ffmpegError:',error);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest);
+								// Move "new" json to "failed" json folder
+								fs.renameSync(jsonNewDir + file, jsonFailedDir + file);
+								// Send callback to take care of the next json file
+								callback();
+							}
+							else {
+								// Finished to add metadatas
+								console.log('ffmpegSuccess for file:',fileJson.filename);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + fileJson.filenameTest);
+								// Move "new" json to "completed" json folder
+								fs.renameSync(jsonNewDir + file, jsonCompletedDir + file);
+								// Send callback to take care of the next json file
+								callback();
+							}
+						});
+					});
 			} else {
 				// File is not a json, skip it.
 				// Send callback to take care of the next json file
@@ -302,13 +304,13 @@ function downloadVideos() {
 			}
 		}, function(err){
 			// Function in case of error
-			if(err){console.error('async',err)}
+			if(err){console.error('async',err);}
 			// End of this function
 			console.log('function downloadVideos() finished!');
-		})
+		});
 	}
-)
-};
+	);
+}
 
 /* SIDENOTE
 I should rewrite a huge part of this code and use more "callback"/"function calling"

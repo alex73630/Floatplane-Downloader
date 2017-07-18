@@ -1,0 +1,18 @@
+.form-container {
+	background: rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+	padding: 10px;
+}
+label form .form-container {
+	padding-bottom: 20px;
+}
+@media (min-height:615px) {
+	.grid-x.grid-padding-x {
+    width: 100%;
+    position: fixed;
+    height: 500px;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+	}
+}

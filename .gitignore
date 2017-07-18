@@ -3,3 +3,4 @@ plexTestDownload/
 config.json
 *.sample.*
 *.back.*
+.eslintrc.*

@@ -1,0 +1,15 @@
+body {
+    background: rgb(35,35,35);
+    color: white;
+}
+label {
+	color:white;
+}
+
+.top-bar {
+    background: rgb(25,25,25);
+}
+
+.top-bar ul {
+    background: inherit;
+}
