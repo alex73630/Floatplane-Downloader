@@ -1,18 +1,18 @@
 {
   "name": "floatplane-downloader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A tool that automatically download new LTT videos from Floatplane Club and parse them for Plex.",
   "main": "index.js",
   "scripts": {
-		"start":"node index.js"
+    "start": "node index.js"
   },
   "author": {
-		"name":"Alexandre Sanchez",
-		"email":"contact@alex73630.xyz"
-	},
-	"repository" :
-  { "type" : "git",
-		"url" : "https://github.com/alex73630/floatplane-downloader.git"
+    "name": "Alexandre Sanchez",
+    "email": "contact@alex73630.xyz"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alex73630/floatplane-downloader.git"
   },
   "license": "GPL-3.0",
   "dependencies": {
