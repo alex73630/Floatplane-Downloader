@@ -45,8 +45,8 @@ var configPromise = new Promise(function(resolve,reject){
 			publicIp.v4().then(publicip => {
 				const configID = uuidv4();
 
-				var configURL = 'http://' + publicip + ':8000/' + configID;
-				var localConfigURL = 'http://' + ip.address() + ':8000/' + configID;
+				var configURL = 'http://' + publicip + ':8000/setup/' + configID;
+				var localConfigURL = 'http://' + ip.address() + ':8000/setup/' + configID;
 
 				console.log('First start or app not setup, go to this URL to config:');
 				console.log('External server:',configURL);
@@ -145,26 +145,43 @@ var configPromise = new Promise(function(resolve,reject){
 					res.sendFile(__dirname + '/web/html/library.html');
 				});
 			app.get('/library/refresh',function(req,res) {
-				res.send('Refresh page');
-				refreshPostList();
-			});
-			app.get('/library/byVideoId/:videoID',function(req,res) {
-				videoID = parseFloat(req.params.videoID);
-				db.library.findOne({'videoID':videoID},function(err,doc){
-					res.send(doc);
+				refreshPostList(function(newVideos) {
+					res.send('Refreshed post list, newVideos: ' + newVideos);
 				});
 			});
 			app.get('/library/all',function(req,res) {
-				db.library.find({},function(err,docs){
+				db.library.find({}).sort({date:-1}).exec(function(err,docs){
 					res.send(docs);
 				});
 			});
-			app.put('/library/byVideoId/:videoID',function(req,res) {
-				// Update a specific video
-			});
-			app.delete('/library/byVideoId/:videoID',function(req,res) {
-				// Delete a specific video
-			});
+
+			app.route('/library/byVideoId/:videoID')
+				.get(function(req,res) {
+					videoID = parseFloat(req.params.videoID);
+					db.library.findOne({'videoID':videoID},function(err,doc){
+						res.send(doc);
+					});
+				})
+				.post(function(req,res) {
+					// Download a video
+					downloadVideo(req.params.videoID,function(callback) {
+						res.send(callback);
+					});
+				})
+				.put(function(req,res) {
+					// Update a specific video
+				})
+				.delete(function(req,res) {
+					// Delete a specific video
+				});
+
+			app.route('/library/byChannel/:channelName')
+				.get(function(req,res) {
+					db.library.find({'channel':req.params.channelName},function(err,docs){
+						res.send(docs);
+					});
+				});
+
 			app.post('/library/add',function(req,res) {
 				// Manually add a video from a Forum URL
 			});
@@ -172,13 +189,15 @@ var configPromise = new Promise(function(resolve,reject){
 				.get(function(req,res){
 					res.sendFile(__dirname + '/web/html/home.html');
 				});
-
+			var localURL = 'http://' + ip.address() + ':8000/';
+			console.log('Server up and running at:',localURL);
 		});
 	});
 
 
-function refreshPostList() {
+function refreshPostList(callback) {
 	var interval = 1 * 500;
+	newVideosDatas = new Array();
 	request({url: 'https://linustechtips.com/main/forum/91-the-floatplane-club/',jar: cookiejar},
 		function (error, response, body) {
 			console.log('error:', error); // Print the error if one occurred
@@ -211,9 +230,6 @@ function refreshPostList() {
 						// Get all values and save them in a json
 						videoGUID = $('.floatplane-script').data('videoGuid'); // VideoID value
 
-						// Post URL
-						postURL = postTitleContainer[i].attribs.href;
-
 						request({url:'https://cms.linustechtips.com/get/videos/by_guid/' + videoGUID, jar: cookiejar}, function (error,response,body) {
 							values = JSON.parse(body);
 
@@ -229,36 +245,38 @@ function refreshPostList() {
 								videoID:values.id_video, // ID used for this loop
 								title:values.title, // Title
 								channel:values.channel, // If it's a LTT or CSF or TQ video
+								description:values.description,
 								filename:fileName, // Final filename
 								filenameTest:fileNameNotEdited, // Temp filename
-								postURL:postURL, // Forum post link (unused)
+								postURL:postTitleContainer[i].attribs.href, // Forum post link (unused)
 								date:moment(values.added_date).format('YYYY-MM-DD'), // Release date
 								dateTime:values.added_date,
 								guid:values.guid, // Video ID
-								thumbnail:'https://cms.linustechtips.com' + values.thumbnail,
+								thumbnail:'https://cms.linustechtips.com/get/thumbnails/by_guid/' + values.guid,
 								dlURL:'', // Video download URL
 								downloaded:false,
 							};
-							if (values.id_video !== undefined) {
+							if (values.guid !== undefined) {
 								// Declare vars
 								videoQuality = config.videoQuality;
 								getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + values.guid + '&video_quality='+ videoQuality +'&download=1';
 								request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
 									linksAndTitles[i].dlURL = body;
-									db.library.insert(linksAndTitles[i],function(err,newDoc){
-										console.log(newDoc._id);
+									db.library.findOne({'videoID':linksAndTitles[i].videoID},function(err,doc){
+										if (doc === null) {
+											db.library.insert(linksAndTitles[i],function(err,newDoc){
+												console.log(newDoc._id);
+												newVideosDatas.post(newDoc);
+											});
+										}
 									});
+
 								});
 							}
 						});
 					});
 				}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
 			}
-			// Wait 30s and start downloading videos
-			// TODO: Make it as a callback when json are all saved.
-			setTimeout(function(){
-				//downloadVideos();
-			}, interval * 30);
 		}
 	);
 }

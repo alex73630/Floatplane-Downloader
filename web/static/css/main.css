@@ -1,6 +1,7 @@
 body {
     background: rgb(35,35,35);
     color: white;
+		margin-top: 55px;
 }
 label {
 	color:white;
@@ -8,8 +9,15 @@ label {
 
 .top-bar {
     background: rgb(25,25,25);
+		position: fixed;
+    width: 100%;
+    z-index: 1000;
+		top:0;
 }
 
 .top-bar ul {
     background: inherit;
+}
+.menu a {
+    font-weight: bold;
 }
