@@ -1,6 +1,8 @@
 // Config and dependencies
 var request = require('request');
 var ProgressBar = require('progress');
+var fs = require('fs');
+var async = require('async');
 var cheerio = require('cheerio');
 var https = require('https');
 var uuidv4 = require('uuid/v4');
@@ -66,7 +68,8 @@ var configPromise = new Promise(function(resolve,reject){
 							'plexFolder': req.query.dlPath,
 							'lttFolderName': 'Linus Tech Tips/',
 							'tqFolderName': 'Techquickie/',
-							'csfFolderName': 'Channel Super Fun/'
+							'csfFolderName': 'Channel Super Fun/',
+							'keepTime': 30
 						};
 						db.config.insert(config,function(err,newDoc) {
 							console.log(newDoc._id);
@@ -164,15 +167,16 @@ var configPromise = new Promise(function(resolve,reject){
 				})
 				.post(function(req,res) {
 					// Download a video
-					downloadVideo(req.params.videoID,function(callback) {
+					downloadVideos(req.params.videoID,function(callback) {
 						res.send(callback);
 					});
 				})
 				.put(function(req,res) {
-					// Update a specific video
+					// Update a specific video metadata
 				})
 				.delete(function(req,res) {
 					// Delete a specific video
+					console.log('Delete video triggered for:',req.params.videoID);
 				});
 
 			app.route('/library/byChannel/:channelName')
@@ -194,10 +198,28 @@ var configPromise = new Promise(function(resolve,reject){
 		});
 	});
 
+function videoTypeFolderFun(type) {
+	if (type == 'LTT') {
+		return config.lttFolderName;
+	} else if (type == 'CSF') {
+		return config.csfFolderName;
+	} else if (type == 'TQ') {
+		return config.tqFolderName;
+	}
+}
+function parseTypeForTitle(type){
+	if (type == 'LTT') {
+		return 'Linus Tech Tips';
+	} else if (type == 'CSF') {
+		return 'Channel Super Fun';
+	} else if (type == 'TQ') {
+		return 'Techquickie';
+	}
+}
 
 function refreshPostList(callback) {
 	var interval = 1 * 500;
-	newVideosDatas = new Array();
+	var newVideosDatas = new Array();
 	request({url: 'https://linustechtips.com/main/forum/91-the-floatplane-club/',jar: cookiejar},
 		function (error, response, body) {
 			console.log('error:', error); // Print the error if one occurred
@@ -237,9 +259,11 @@ function refreshPostList(callback) {
 							bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
 							parsedTitleForFile = values.title.replace(bannedFilenameChars, '');
 
+							channelForFile = parseTypeForTitle(values.channel);
+
 							// Filenames (final and temp.)
-							fileName = values.channel + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + '.mp4';
-							fileNameNotEdited = values.channel + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + ' - NOT EDITED.mp4';
+							fileName = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + '.mp4';
+							fileNameNotEdited = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + ' - NOT EDITED.mp4';
 
 							linksAndTitles[i] = {
 								videoID:values.id_video, // ID used for this loop
@@ -251,6 +275,7 @@ function refreshPostList(callback) {
 								postURL:postTitleContainer[i].attribs.href, // Forum post link (unused)
 								date:moment(values.added_date).format('YYYY-MM-DD'), // Release date
 								dateTime:values.added_date,
+								timestamp:moment(values.added_date).format('x'),
 								guid:values.guid, // Video ID
 								thumbnail:'https://cms.linustechtips.com/get/thumbnails/by_guid/' + values.guid,
 								dlURL:'', // Video download URL
@@ -266,7 +291,7 @@ function refreshPostList(callback) {
 										if (doc === null) {
 											db.library.insert(linksAndTitles[i],function(err,newDoc){
 												console.log(newDoc._id);
-												newVideosDatas.post(newDoc);
+												newVideosDatas.push(newDoc);
 											});
 										}
 									});
@@ -279,4 +304,149 @@ function refreshPostList(callback) {
 			}
 		}
 	);
+}
+
+function downloadVideos(videoID, callbackList) {
+	maxTime = moment().subtract(config.keepTime,'days').format('x');
+	downloadedVideos = new Array();
+
+	if (videoID === 'auto') {
+		db.library.find({'downloaded':false,'timestamp':{$gte:maxTime}}).exec(function(err,docs) {
+			async.eachSeries(docs,function(file,callback){
+				// Start downloading file
+				videoTypeFolder = videoTypeFolderFun(file.channel);
+				request(file.dlURL)
+					.on('response', function (res) {
+						console.log(file.filenameTest);
+						// Create a ProgressBar to know download status
+						len = parseInt(res.headers['content-length'], 10);
+						bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
+							complete: '=',
+							incomplete: ' ',
+							width: 30,
+							total: len
+						});
+
+						// Write the incoming flux into an intermediary file
+						res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + file.filenameTest));
+					})
+
+				// When receving data, make ProgressBar... Progress...
+					.on('data', function(chunk) {
+						bar.tick(chunk.length);
+					})
+
+				// When file finished to download
+					.on('end', function(){
+						console.log('\n');
+						createdDate = file.date + 'T00:00:00';
+
+						// Create a metadata object containing important metadatas
+						metadata = {
+							title: file.title,
+							creation_time: createdDate
+						};
+
+						// Set ffmpeg path and arguments then launch it.
+						cmd = '"' + ffmpegStatic.path + '"';
+						args = ' -i "' + config.plexFolder + videoTypeFolder + file.filenameTest + '" -y -acodec copy -vcodec copy -metadata title="' + file.title + '" -metadata creation_time="' + createdDate + '" "' + config.plexFolder + videoTypeFolder + file.filename + '"';
+						exec(cmd + args , function(error,stdout,stderr){
+							if (error) {
+								// Error while adding metadatas
+								console.log('ffmpegError:',error);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + file.filenameTest);
+								// Send callback to take care of the next json file
+								callback();
+							}
+							else {
+								// Finished to add metadatas
+								console.log('ffmpegSuccess for file:',file.filename);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + file.filenameTest);
+								// Set video as downloaded
+								db.library.update({'videoID':file.videoID},{$set:{downloaded:true}},{},function() {
+									// Send callback to edit the next video
+									downloadedVideos.push(file.videoID);
+									callback();
+								});
+							}
+						});
+					});
+			}, function(err){
+				if (err === null) {
+					console.log('Finished downloading videos:',downloadedVideos);
+					callbackList('Finished downloading videos: ' + downloadedVideos);
+				}
+			});
+		});
+	}
+
+	else {
+		videoIDFloat = parseFloat(videoID);
+		db.library.findOne({'videoID':videoIDFloat}).exec(function(err,doc){
+			if(doc.downloaded === true){
+				console.log('Video '+ doc.videoID +' already downloaded. Skip it...');
+			}
+			else{
+				// Start downloading file
+				videoTypeFolder = videoTypeFolderFun(doc.channel);
+				request(doc.dlURL)
+					.on('response', function (res) {
+						console.log(doc.filenameTest);
+						// Create a ProgressBar to know download status
+						len = parseInt(res.headers['content-length'], 10);
+						bar = new ProgressBar('Downloading: [:bar] :percent :etas',{
+							complete: '=',
+							incomplete: ' ',
+							width: 30,
+							total: len
+						});
+
+						// Write the incoming flux into an intermediary file
+						res.pipe(fs.createWriteStream(config.plexFolder + videoTypeFolder + doc.filenameTest));
+					})
+
+				// When receving data, make ProgressBar... Progress...
+					.on('data', function(chunk) {
+						bar.tick(chunk.length);
+					})
+
+				// When file finished to download
+					.on('end', function(){
+						console.log('\n');
+						createdDate = doc.date + 'T00:00:00';
+
+						// Create a metadata object containing important metadatas
+						metadata = {
+							title: doc.title,
+							creation_time: createdDate
+						};
+
+						// Set ffmpeg path and arguments then launch it.
+						cmd = '"' + ffmpegStatic.path + '"';
+						args = ' -i "' + config.plexFolder + videoTypeFolder + doc.filenameTest + '" -y -acodec copy -vcodec copy -metadata title="' + doc.title + '" -metadata creation_time="' + createdDate + '" "' + config.plexFolder + videoTypeFolder + doc.filename + '"';
+						exec(cmd + args , function(error,stdout,stderr){
+							if (error) {
+								// Error while adding metadatas
+								console.log('ffmpegError:',error);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + doc.filenameTest);
+							}
+							else {
+								// Finished to add metadatas
+								console.log('ffmpegSuccess for file:',doc.filename);
+								// Delete temporary file
+								fs.unlinkSync(config.plexFolder + videoTypeFolder + doc.filenameTest);
+								// Set video as downloaded
+								db.library.update({videoID:doc.videoID},{$set:{downloaded:true}},{},function() {
+									downloadedVideos.push(doc.videoID);
+									callbackList('Finished downloading videos: ' + downloadedVideos);
+								});
+							}
+						});
+					});
+			}
+		});
+	}
 }

@@ -20,7 +20,7 @@ function addItemList(item) {
 				'<div class="buttons-container">'+
 					'<a onclick="OpenModal(\'modal-'+ item.videoID +'\')"><i class="fa fa-info fa-lg info" aria-hidden="true"></i></a>'+
 					'<a><i class="fa fa-pencil fa-lg edit" aria-hidden="true"></i></a>'+
-					'<a><i class="fa '+ downloadStatus.icon +' fa-lg delete" aria-hidden="true"></i></a>'+
+					'<a onclick="'+ downloadStatus.onclickFun +'('+ item.videoID +')"><i class="fa '+ downloadStatus.icon +' fa-lg '+ downloadStatus.buttonType +'" aria-hidden="true"></i></a>'+
 				'</div>'+
 			'</div>';
 	$('.library-list-container').append(htmlStructure);
@@ -115,10 +115,10 @@ function channelNameParser(type){
 }
 function downloadStatusParser(status) {
 	if (status === false){
-		return {status:'No',icon:'fa-download'};
+		return {status:'No',icon:'fa-download',buttonType:'download',onclickFun:'downloadVideo'};
 	}
 	else if (status === true) {
-		return {status:'Yes',icon:'fa-trash'};
+		return {status:'Yes',icon:'fa-trash',buttonType:'delete',onclickFun:'deleteVideo'};
 	}
 }
 
@@ -136,4 +136,30 @@ function CloseModal(modalID) {
 	}, 300);
 }
 
+function downloadVideo(videoID) {
+	var http = new XMLHttpRequest();
+	var url = window.location.href + '/byVideoId/' + videoID;
+	http.open('POST', url, true);
+	http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+	http.onreadystatechange = function() {
+		if(http.readyState == 4 && http.status == 201) {
+			console.log(http.responseText);
+		}
+	};
+	http.send();
+}
+function deleteVideo(videoID) {
+	var http = new XMLHttpRequest();
+	var url = window.location.href + '/byVideoId/' + videoID;
+	http.open('DELETE', url, true);
+	http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+	http.onreadystatechange = function() {
+		if(http.readyState == 4 && http.status == 201) {
+			console.log(http.responseText);
+		}
+	};
+	http.send();
+}
 itemParser();

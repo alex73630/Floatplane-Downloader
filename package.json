@@ -16,7 +16,7 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "async": "^2.4.1",
+    "async": "^2.5.0",
     "cheerio": "^0.22.0",
     "express": "^4.15.3",
     "ffmpeg-static": "^2.0.0",

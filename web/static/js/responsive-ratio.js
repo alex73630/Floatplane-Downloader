@@ -7,6 +7,5 @@ function ResponsiveRatio(){
 		CalculatedVideoHeight = CurrWidth / CustomRatio;
 		CustomVideoHeight = Math.round(CalculatedVideoHeight);
 		$(this).css('height', CustomVideoHeight);
-		console.log(CustomVideoHeight);
 	});
 }
