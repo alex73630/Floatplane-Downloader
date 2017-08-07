@@ -189,10 +189,18 @@ var configPromise = new Promise(function(resolve,reject){
 			app.post('/library/add',function(req,res) {
 				// Manually add a video from a Forum URL
 			});
-			app.route('/settings')
-				.get(function(req,res){
-					res.sendFile(__dirname + '/web/html/home.html');
+			app.get('/settings',function(req,res){
+					res.sendFile(__dirname + '/web/html/settings.html');
 				});
+			app.route('/settings/config')
+				.get(function(req,res) {
+					configWithoutPass = config;
+					configWithoutPass.password = 'xxx';
+					res.send(configWithoutPass);
+				})
+				.post(function(req,res) {
+					// Update config
+				})
 			var localURL = 'http://' + ip.address() + ':8000/';
 			console.log('Server up and running at:',localURL);
 		});
