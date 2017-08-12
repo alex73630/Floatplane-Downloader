@@ -7,6 +7,9 @@ var cheerio = require('cheerio');
 var https = require('https');
 var uuidv4 = require('uuid/v4');
 var moment = require('moment');
+var os = require('os');
+var path = require('path');
+console.log(os.platform());
 // Databases
 var Datastore = require('nedb'),
 	db = {};
@@ -60,7 +63,6 @@ var configPromise = new Promise(function(resolve,reject){
 					})
 					.post(function(req,res){
 						console.log(req.query);
-						res.status(201).send('Query recevied: ' + JSON.stringify(req.query));
 						config = {
 							'auth': req.query.lttForumLogin,
 							'password': req.query.lttForumPassword,
@@ -73,9 +75,20 @@ var configPromise = new Promise(function(resolve,reject){
 						};
 						db.config.insert(config,function(err,newDoc) {
 							console.log(newDoc._id);
+							setTimeout(function () {
+								res.status(201).send('Query recevied');
+							}, 5000);
 							resolve(newDoc);
 						});
 					});
+				app.get('/setup/path', function(req,res) {
+					if (os.platform() === 'win32'){
+						res.status(201).send(path.normalize(__dirname + '\\'));
+					} else {
+						res.status(201).send(__dirname + '/');
+					}
+
+				});
 			});
 		}
 		else {
@@ -149,7 +162,7 @@ var configPromise = new Promise(function(resolve,reject){
 				});
 			app.get('/library/refresh',function(req,res) {
 				refreshPostList(function(newVideos) {
-					res.send('Refreshed post list, newVideos: ' + newVideos);
+					res.send(newVideos);
 				});
 			});
 			app.get('/library/all',function(req,res) {
@@ -190,8 +203,8 @@ var configPromise = new Promise(function(resolve,reject){
 				// Manually add a video from a Forum URL
 			});
 			app.get('/settings',function(req,res){
-					res.sendFile(__dirname + '/web/html/settings.html');
-				});
+				res.sendFile(__dirname + '/web/html/settings.html');
+			});
 			app.route('/settings/config')
 				.get(function(req,res) {
 					configWithoutPass = config;
@@ -200,7 +213,7 @@ var configPromise = new Promise(function(resolve,reject){
 				})
 				.post(function(req,res) {
 					// Update config
-				})
+				});
 			var localURL = 'http://' + ip.address() + ':8000/';
 			console.log('Server up and running at:',localURL);
 		});
@@ -251,65 +264,80 @@ function refreshPostList(callback) {
 			// Create an array to store post infos before saving them in json files
 			var linksAndTitles = [];
 			// Get and list 10 last posts
+			postPromiseList = new Array();
+			requestPost = new Array();
 			for (let i = 1; i < 11; i++) {
-				setTimeout(function() {
-					console.log('Start requesting:', postTitleContainer[i].attribs.href);
-					request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
-						var $ = cheerio.load(body);
+				requestPost[i] = new Promise(function(resolve,reject){
+					setTimeout(function() {
+						console.log('Start requesting:', postTitleContainer[i].attribs.href);
+						request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
+							var $ = cheerio.load(body);
 
-						// Get all values and save them in a json
-						videoGUID = $('.floatplane-script').data('videoGuid'); // VideoID value
 
-						request({url:'https://cms.linustechtips.com/get/videos/by_guid/' + videoGUID, jar: cookiejar}, function (error,response,body) {
-							values = JSON.parse(body);
+							// Get all values and save them in a json
+							//videoGUID = $('.floatplane-script').data('videoGuid'); // VideoID value
+							linkRegEx = new RegExp('.+(player/)');
+							videoGUID = $('iframe','.video-container').attr('src').replace(linkRegEx,'');
 
-							// Parsing values for filename
-							bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
-							parsedTitleForFile = values.title.replace(bannedFilenameChars, '');
+							request({url:'https://cms.linustechtips.com/get/videos/by_guid/' + videoGUID, jar: cookiejar}, function (error,response,body) {
+								values = JSON.parse(body);
 
-							channelForFile = parseTypeForTitle(values.channel);
+								// Parsing values for filename
+								bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
+								parsedTitleForFile = values.title.replace(bannedFilenameChars, '');
 
-							// Filenames (final and temp.)
-							fileName = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + '.mp4';
-							fileNameNotEdited = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + ' - NOT EDITED.mp4';
+								channelForFile = parseTypeForTitle(values.channel);
 
-							linksAndTitles[i] = {
-								videoID:values.id_video, // ID used for this loop
-								title:values.title, // Title
-								channel:values.channel, // If it's a LTT or CSF or TQ video
-								description:values.description,
-								filename:fileName, // Final filename
-								filenameTest:fileNameNotEdited, // Temp filename
-								postURL:postTitleContainer[i].attribs.href, // Forum post link (unused)
-								date:moment(values.added_date).format('YYYY-MM-DD'), // Release date
-								dateTime:values.added_date,
-								timestamp:moment(values.added_date).format('x'),
-								guid:values.guid, // Video ID
-								thumbnail:'https://cms.linustechtips.com/get/thumbnails/by_guid/' + values.guid,
-								dlURL:'', // Video download URL
-								downloaded:false,
-							};
-							if (values.guid !== undefined) {
-								// Declare vars
-								videoQuality = config.videoQuality;
-								getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + values.guid + '&video_quality='+ videoQuality +'&download=1';
-								request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
-									linksAndTitles[i].dlURL = body;
-									db.library.findOne({'videoID':linksAndTitles[i].videoID},function(err,doc){
-										if (doc === null) {
-											db.library.insert(linksAndTitles[i],function(err,newDoc){
-												console.log(newDoc._id);
-												newVideosDatas.push(newDoc);
-											});
-										}
+								// Filenames (final and temp.)
+								fileName = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + '.mp4';
+								fileNameNotEdited = channelForFile + ' - ' + moment(values.added_date).format('YYYY-MM-DD') + ' - ' + parsedTitleForFile + ' - NOT EDITED.mp4';
+
+								linksAndTitles[i] = {
+									videoID:values.id_video, // ID used for this loop
+									title:values.title, // Title
+									channel:values.channel, // If it's a LTT or CSF or TQ video
+									description:values.description,
+									filename:fileName, // Final filename
+									filenameTest:fileNameNotEdited, // Temp filename
+									postURL:postTitleContainer[i].attribs.href, // Forum post link (unused)
+									date:moment(values.added_date).format('YYYY-MM-DD'), // Release date
+									dateTime:values.added_date,
+									timestamp:moment(values.added_date).format('x'),
+									guid:values.guid, // Video ID
+									thumbnail:'https://cms.linustechtips.com/get/thumbnails/by_guid/' + values.guid,
+									dlURL:'', // Video download URL
+									downloaded:false,
+								};
+								if (values.guid !== undefined) {
+									// Declare vars
+									videoQuality = config.videoQuality;
+									getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + values.guid + '&video_quality='+ videoQuality +'&download=1';
+									request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
+										linksAndTitles[i].dlURL = body;
+										db.library.findOne({'videoID':linksAndTitles[i].videoID},function(err,doc){
+											if (doc === null) {
+												db.library.insert(linksAndTitles[i],function(err,newDoc){
+													console.log(newDoc._id);
+													newVideosDatas.push(newDoc);
+													resolve(true);
+												});
+											}
+											else {
+												resolve(true);
+											}
+										});
+
 									});
-
-								});
-							}
+								}
+							});
 						});
-					});
-				}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
+					}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
+				});
+				postPromiseList.push(requestPost[i]);
 			}
+			Promise.all(postPromiseList).then(function(values) {
+				callback(newVideosDatas);
+			});
 		}
 	);
 }

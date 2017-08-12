@@ -23,14 +23,14 @@
 		  <div class="large-6 medium-12 cell">
 				<div class="form-container">
 					<h3>Setup</h3>
-					<form id="setup-form">
+					<form id="setup-form" data-abide novalidate>
 						<label>
 						  LinusTechTips Forum login
-						  <input id="lttForumLogin" name="lttForumLogin" type="text">
+						  <input id="lttForumLogin" name="lttForumLogin" required type="text">
 						</label>
 						<label>
 							LinusTechTips Forum password
-							<input id="lttForumPassword" name="lttForumPassword" type="password">
+							<input id="lttForumPassword" name="lttForumPassword" required type="password">
 						</label>
 						<label>
 							Download quality
@@ -43,12 +43,12 @@
 						</label>
 						<label>
 						  Download path
-						  <input id="dlPath" name="dlPath" type="text">
+						  <input id="dlPath" name="dlPath" required type="text">
 						</label>
 						<div class="grid-x">
 						  <div class="auto cell"></div>
 							<div class="medium-8 small-12 cell">
-								<button type="button" class="button expanded" id="form-send" onclick="sendSettings()">Send</button>
+								<button type="button" class="button expanded" id="form-send">Send</button>
 							</div>
 							<div class="auto cell"></div>
 						</div>
@@ -57,6 +57,28 @@
 			</div>
 
 		  <div class="auto cell"></div>
+		</div>
+
+		<div class="small reveal" id="disclaimerModal" data-reveal data-close-on-click="false" data-close-on-esc="false" data-animation-in="fade-in" data-animation-out="fade-out" data-show-delay="200">
+			<h1>Disclaimer</h1>
+			<hr>
+			<p style="margin-bottom: 0.2rem;">This is an early alpha program delivered as it is. At this state, I only recommend it to advanced users that knows a bit of NodeJS and command-line tools. I am not responsible of any damages or issues that this program could do.</p>
+			<p style="margin-bottom: 0.2rem;">If you encounter an issue with this program, you can open an issue here <a href="https://github.com/alex73630/Floatplane-Downloader/issues">https://github.com/alex73630/Floatplane-Downloader/issues</a> explaining what went wrong and, if possible, log and screenshots of the bug.</p>
+			<p>This tool have been tested on different platforms, you can check on <a href="https://github.com/alex73630/Floatplane-Downloader#officially-supported-use-cases">https://github.com/alex73630/Floatplane-Downloader#officially-supported-use-cases</a> to see what are the officially supported use cases or "known to work" platforms.</p>
+			<p style="margin-bottom: 0.2rem;">I (alex73630) and this program are not affiliated in anyway with Linus Media Group ("LMG"), this program is allowed by LMG as a tool to help Floatplane Club ("FPC") subscribers to watch FPC content through Plex.</p>
+			<p style="margin-bottom: 0.2rem;">You should also note that this program is the product of a long retro-engineering process of the LinusTechTips ("LTT") forums and the FPC subforum.</p>
+			<p>As this tool allows to download and parse FPC content for Plex and as written in the FPC agreement (quoted bellow), the downloaded content have to be only accessible to you and no one else.</p>
+			<blockquote>
+				<p>All video content herein is the sole intellectual property of Linus Media Group ("LMG"). You are permitted to download and store the video content, including storage on a cloud computing system only accessible to you, but LMG reserves all rights in the content and does not grant you a license to distribute said content publicly via any medium or exhibit the content publicly, regardless of whether the content has been modified and regardless of whether you receive monetary gain or other tangible benefit.</p>
+				<p>LMG reserves the right to take any and all action necessary to protect its rights in said video content, including but not limited to filing DMCA takedown notices and pursuing civil remedies.</p>
+			</blockquote>
+			<p>If you are sharing your Plex server with anyone, you have to disable access to the FPC Plex Library to them. This tutorial explains how to do it : <a href="https://support.plex.tv/hc/en-us/articles/201161067-Edit-an-Existing-Share">https://support.plex.tv/hc/en-us/articles/201161067-Edit-an-Existing-Share</a></p>
+			<p>This tool could have access to your Plex server in the next updates for some features to work (metadata update, automated library setup, disable library sharing...).</p>
+			<p>By clicking on "Accept and continue" and by using this software, you confirm that you have read and agree with those lines.</p>
+			<div class="modalButtons">
+				<button type="button" class="button" data-close onclick="$('#disclaimerModal').foundation('close')">Accept and continue</button>
+				<button type="button" class="alert button" onclick="refuseTerms()">Refuse and stop</button>
+			</div>
 		</div>
 
 		<!-- Scripts -->

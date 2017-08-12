@@ -1,3 +1,4 @@
+var videoLibrary = new Array();
 function addItemList(item) {
 	var regexParagraph = new RegExp(/<\/?p>/g);
 	var regexParagraphJump = new RegExp(/&nbsp;/g);
@@ -100,6 +101,18 @@ function itemParser(){
 		console.log(callback);
 		callback.forEach(elem => {
 			addItemList(elem);
+			videoLibrary.push(elem);
+		});
+	});
+}
+
+function refreshLibrary() {
+	url = window.location.origin + '/library/refresh/';
+	jQuery.get(url,{},function(callback){
+		console.log(callback);
+		callback.forEach(elem => {
+			addItemList(elem);
+			videoLibrary.push(elem);
 		});
 	});
 }
