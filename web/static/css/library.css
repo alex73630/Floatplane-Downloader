@@ -17,16 +17,17 @@
 .list-item {
   width: 100%;
   padding: 10px;
-  height: 122px;
+  min-height: 150px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .right-container {
   float: right;
-  height: 100%;
+  height: 129px;
   position: relative;
   width: calc(100% - 180px);
   padding-left: 20px;
+  font-size: 13px;
 }
 
 .info-container span {
@@ -40,6 +41,7 @@
 
 p.title {
   font-size: 20px;
+	color: white;
 }
 
 .buttons-container a {
@@ -50,12 +52,14 @@ p.title {
   position: absolute;
   bottom: 0;
   right: 0;
+  font-size: 1.33333333em;
 }
 
 .info-container {
   float: left;
   margin-right: 10px;
   height: 100%;
+  color: rgba(255,255,255,0.9);
 }
 
 .description-container {
@@ -65,12 +69,27 @@ p.title {
   left: 200px;
   right: 90px;
   position: absolute;
+	color:rgba(255,255,255,0.6);
 }
 
 .description-container p {
   margin: 0;
   word-wrap: break-word;
   word-break: break-all;
+}
+
+.description-shadow {
+    -webkit-box-shadow: inset 0px -10px 15px -5px rgba(30,30,30,1);
+    -moz-box-shadow: inset 0px -10px 15px -5px rgba(30,30,30,1);
+    box-shadow: inset 0px -10px 15px -5px rgba(30,30,30,1);
+    height: calc(100% - 30px);
+    overflow: hidden;
+    margin-top: 25px;
+    left: 200px;
+    right: 90px;
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .modal-thumbnail-container{
@@ -115,4 +134,15 @@ table tbody {
 
 table tbody tr:nth-child(even) {
   background-color: rgb(22, 22, 22);
+}
+
+.library-toolbar {
+	margin-top: 20px;
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 5px;
+	padding: 15px;
+}
+
+.refreshButton {
+    margin: 0;
 }

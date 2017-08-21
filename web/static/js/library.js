@@ -15,6 +15,7 @@ function addItemList(item) {
 					'<p class="release-date"><i class="fa fa-clock-o" aria-hidden="true"></i>	'+ item.date +'</p>'+
 					'<p class="downloaded"><i class="fa fa-download" aria-hidden="true"></i>	'+ downloadStatus.status +'</p>'+
 				'</div>'+
+				'<div class="description-shadow"></div>'+
 				'<div class="description-container">'+
 				'<p>'+parsedDescription +'</p>'+
 				'</div>'+
