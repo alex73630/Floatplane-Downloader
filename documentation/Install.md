@@ -22,7 +22,7 @@ And install program dependencies with this command:
 
     npm install
 
-Go to "Run the app" step to continue.
+Go to "[Configure the script](Install.md#configure-the-script)" step to continue.
 
 ##### Without Git
 If you have not, simply download the Git repo as a zip with this link: [Download Link](https://codeload.github.com/alex73630/floatplane-downloader/zip/master)
@@ -103,7 +103,7 @@ And install program dependencies with this command:
 
     npm install
 
-Go to "Run the app" step to continue.
+Go to "[Configure the script](Install.md#configure-the-script)" step to continue.
 
 ##### Without Git
 If you have not, simply download the Git repo as a zip and extract it where you want to install the program with this command:
