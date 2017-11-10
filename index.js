@@ -72,12 +72,12 @@ function getFloatplanePage() {
 			var $ = cheerio.load(floatplanePage);
 
 			// Target the postList
-			var baseURLtarget = 'https://linustechtips.com/main/forum/91-the-floatplane-club/?page=1';
-			var postList = $('div.ipsBox[data-baseurl="' + baseURLtarget + '"]').children('ol');
+			var baseURLtarget = 'https://linustechtips.com/main/forum/91-lmg-floatplane/?page=1';
+			var postList = $('.cTopicList');
 
 			// Get values in an array
 			var postTitles = postList.children().children('div.ipsDataItem_main');
-			var postTitleContainer = postTitles.children('h4').children('div').children('a');
+			var postTitleContainer = postTitles.children('h4').children('span.cTopicTitle').children('a');
 			var postTimeContainer = postTitles.children('div').children('time');
 
 			// Create an array to store post infos before saving them in json files
