@@ -83,7 +83,8 @@ function getFloatplanePage() {
 			var linksAndTitles = []
 
 			// Get and list 9 last posts
-			for (let i = 1; i < 10; i++) {
+			var i;
+			for (i = 1; i < 10; i++) {
 				setTimeout(function() {
 					console.log('Start requesting:', postTitleContainer[i].attribs.href);
 					request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
@@ -174,7 +175,7 @@ function getFloatplanePage() {
 									console.log(linksAndTitles[i].videoID,'File exist!');
 								}
 							}
-						},200);						
+						},200);
 					})
 				}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
 			}
