@@ -1,6 +1,6 @@
 {
   "name": "floatplane-downloader",
-  "version": "0.1.2",
+  "version": "0.1.5",
   "description": "A tool that automatically download new LTT videos from Floatplane Club and parse them for Plex.",
   "main": "index.js",
   "scripts": {
