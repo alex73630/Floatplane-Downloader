@@ -3,7 +3,6 @@ var request = require('request');
 var ProgressBar = require('progress');
 var fs = require('fs');
 var cheerio = require('cheerio');
-var sleep = require('sleep');
 var https = require('https');
 var async = require('async');
 
@@ -89,92 +88,93 @@ function getFloatplanePage() {
 					console.log('Start requesting:', postTitleContainer[i].attribs.href);
 					request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
 						var $ = cheerio.load(body);
-						sleep.msleep(200);
 
-						// Get all values and save them in a json
-						videoID = $('.floatplane-script').data('videoGuid'); // VideoID value
+						setTimeout(function (){
+							// Get all values and save them in a json
+							videoID = $('.floatplane-script').data('videoGuid'); // VideoID value
 
-						// Video Title
-						title = postTitleContainer[i].attribs.title;
-						regTitle = new RegExp(/(?: ).+/);
-						parsedTitle = regTitle.exec(title)[0].slice(1,-1);
+							// Video Title
+							title = postTitleContainer[i].attribs.title;
+							regTitle = new RegExp(/(?: ).+/);
+							parsedTitle = regTitle.exec(title)[0].slice(1,-1);
 
-						// Video Type
-						regType = new RegExp(/\w+(?=:)/);
-						function parsingType(){
-							if (regType.exec(title) === null || regType.exec(title) === undefined){return 'Unknown'}
-							else {
-								return regType.exec(title)[0];
-							}}
-						parsedType = parsingType();
+							// Video Type
+							regType = new RegExp(/\w+(?=:)/);
+							function parsingType(){
+								if (regType.exec(title) === null || regType.exec(title) === undefined){return 'Unknown'}
+								else {
+									return regType.exec(title)[0];
+								}}
+							parsedType = parsingType();
 
-						// Post URL
-						postURL = postTitleContainer[i].attribs.href;
+							// Post URL
+							postURL = postTitleContainer[i].attribs.href;
 
-						// Video release date
-						dateTime = postTimeContainer[i].attribs.datetime;
-						regDate = new RegExp(/\d+-\d+-\d+/);
-						parsedDate = regDate.exec(dateTime)[0];
+							// Video release date
+							dateTime = postTimeContainer[i].attribs.datetime;
+							regDate = new RegExp(/\d+-\d+-\d+/);
+							parsedDate = regDate.exec(dateTime)[0];
 
-						// Parsing values for filename
-						parsedTypeForTitle = parseTypeForTitle(parsedType);
-						bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
-						parsedTitleForFile = parsedTitle.replace(bannedFilenameChars, '');
+							// Parsing values for filename
+							parsedTypeForTitle = parseTypeForTitle(parsedType);
+							bannedFilenameChars = new RegExp(/[^a-zA-Z0-9.() ]/g);
+							parsedTitleForFile = parsedTitle.replace(bannedFilenameChars, '');
 
-						// Filenames (final and temp.)
-						fileName = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + '.mp4'
-						fileNameTest = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + ' - TEST.mp4'
+							// Filenames (final and temp.)
+							fileName = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + '.mp4'
+							fileNameTest = parsedTypeForTitle + ' - ' + parsedDate + ' - ' + parsedTitleForFile + ' - TEST.mp4'
 
-						// Loging values to debug
-						console.log('---------------------');
-						console.log('error:', error); // Print the error if one occurred
-						console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-						console.log('*********');
-						console.log('videoID:',videoID);
-						console.log('type:',parsedType);
-						console.log('title:',parsedTitleForFile);
-						console.log('date:',parsedDate);
+							// Loging values to debug
+							console.log('---------------------');
+							console.log('error:', error); // Print the error if one occurred
+							console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+							console.log('*********');
+							console.log('videoID:',videoID);
+							console.log('type:',parsedType);
+							console.log('title:',parsedTitleForFile);
+							console.log('date:',parsedDate);
 
-						// Final object
-						linksAndTitles[i] = {
-							postID:i, // ID used for this loop
-							title:parsedTitle, // Title
-							type:parsedType, // If it's a LTT or CSF or TQ video
-							filename:fileName, // Final filename
-							filenameTest:fileNameTest, // Temp filename
-							serie:'Scrapyard Wars', // If this is a specific serie, its name (curently unused)
-							season: 5, // If this is a specific serie, its season number (curently unused)
-							episode: 3, // If this is a specific serie, its episode number (curently unused)
-							postURL:postURL, // Forum post link (unused)
-							date:parsedDate, // Release date
-							videoID:videoID, // Video ID
-							dlURL:'' // Video download URL
-						}
-
-						// Check if the post contains a video, create a json file
-						if (videoID !== undefined && parsedType !== 'Unknown') {
-							// Declare vars
-							videoQuality = config.videoQuality;
-							getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + videoID + '&video_quality='+ videoQuality +'&download=1';
-
-							// Create vars to test if a json already exist
-							existInNew = fs.existsSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
-							existInCompleted = fs.existsSync('json/completed/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
-
-							// Check if json exists
-							if (existInNew === false && existInCompleted === false) {
-								// False: We get the download URL and save values in a json file
-								console.log(linksAndTitles[i].videoID,'File do not exist!');
-								request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
-									linksAndTitles[i].dlURL = body;
-									fs.writeFileSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json', JSON.stringify(linksAndTitles[i]));
-								})
+							// Final object
+							linksAndTitles[i] = {
+								postID:i, // ID used for this loop
+								title:parsedTitle, // Title
+								type:parsedType, // If it's a LTT or CSF or TQ video
+								filename:fileName, // Final filename
+								filenameTest:fileNameTest, // Temp filename
+								serie:'Scrapyard Wars', // If this is a specific serie, its name (curently unused)
+								season: 5, // If this is a specific serie, its season number (curently unused)
+								episode: 3, // If this is a specific serie, its episode number (curently unused)
+								postURL:postURL, // Forum post link (unused)
+								date:parsedDate, // Release date
+								videoID:videoID, // Video ID
+								dlURL:'' // Video download URL
 							}
-							else {
-								// True: We do nothing as the file is already created
-								console.log(linksAndTitles[i].videoID,'File exist!');
+
+							// Check if the post contains a video, create a json file
+							if (videoID !== undefined && parsedType !== 'Unknown') {
+								// Declare vars
+								videoQuality = config.videoQuality;
+								getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + videoID + '&video_quality='+ videoQuality +'&download=1';
+
+								// Create vars to test if a json already exist
+								existInNew = fs.existsSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
+								existInCompleted = fs.existsSync('json/completed/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
+
+								// Check if json exists
+								if (existInNew === false && existInCompleted === false) {
+									// False: We get the download URL and save values in a json file
+									console.log(linksAndTitles[i].videoID,'File do not exist!');
+									request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
+										linksAndTitles[i].dlURL = body;
+										fs.writeFileSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json', JSON.stringify(linksAndTitles[i]));
+									})
+								}
+								else {
+									// True: We do nothing as the file is already created
+									console.log(linksAndTitles[i].videoID,'File exist!');
+								}
 							}
-						}
+						},200);						
 					})
 				}, interval * i, i); // This sets an incremental interval depending on postID (to make a synchronious call in native js)
 			}
