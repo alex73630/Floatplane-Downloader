@@ -83,11 +83,10 @@ function getFloatplanePage() {
 			var linksAndTitles = []
 
 			// Get and list 9 last posts
-			var i;
-			for (i = 1; i < 10; i++) {
-				setTimeout(function() {
-					console.log('Start requesting:', postTitleContainer[i].attribs.href);
-					request({url: postTitleContainer[i].attribs.href, jar: cookiejar}, function (error, response, body) {
+			for (var i = 1; i < 10; i++) {
+				setTimeout(function(num=i) {
+					console.log('Start requesting:', postTitleContainer[num].attribs.href);
+					request({url: postTitleContainer[num].attribs.href, jar: cookiejar}, function (error, response, body) {
 						var $ = cheerio.load(body);
 
 						setTimeout(function (){
@@ -95,7 +94,7 @@ function getFloatplanePage() {
 							videoID = $('.floatplane-script').data('videoGuid'); // VideoID value
 
 							// Video Title
-							title = postTitleContainer[i].attribs.title;
+							title = postTitleContainer[num].attribs.title;
 							regTitle = new RegExp(/(?: ).+/);
 							parsedTitle = regTitle.exec(title)[0].slice(1,-1);
 
@@ -109,10 +108,10 @@ function getFloatplanePage() {
 							parsedType = parsingType();
 
 							// Post URL
-							postURL = postTitleContainer[i].attribs.href;
+							postURL = postTitleContainer[num].attribs.href;
 
 							// Video release date
-							dateTime = postTimeContainer[i].attribs.datetime;
+							dateTime = postTimeContainer[num].attribs.datetime;
 							regDate = new RegExp(/\d+-\d+-\d+/);
 							parsedDate = regDate.exec(dateTime)[0];
 
@@ -136,7 +135,7 @@ function getFloatplanePage() {
 							console.log('date:',parsedDate);
 
 							// Final object
-							linksAndTitles[i] = {
+							linksAndTitles[num] = {
 								postID:i, // ID used for this loop
 								title:parsedTitle, // Title
 								type:parsedType, // If it's a LTT or CSF or TQ video
@@ -158,21 +157,21 @@ function getFloatplanePage() {
 								getDlUrl = 'https://linustechtips.com/main/applications/floatplane/interface/video_url.php?video_guid=' + videoID + '&video_quality='+ videoQuality +'&download=1';
 
 								// Create vars to test if a json already exist
-								existInNew = fs.existsSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
-								existInCompleted = fs.existsSync('json/completed/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json');
+								existInNew = fs.existsSync('json/new/' + linksAndTitles[num].type + '-' + linksAndTitles[num].date + '-' + linksAndTitles[num].videoID + '.json');
+								existInCompleted = fs.existsSync('json/completed/' + linksAndTitles[num].type + '-' + linksAndTitles[num].date + '-' + linksAndTitles[num].videoID + '.json');
 
 								// Check if json exists
 								if (existInNew === false && existInCompleted === false) {
 									// False: We get the download URL and save values in a json file
-									console.log(linksAndTitles[i].videoID,'File do not exist!');
+									console.log(linksAndTitles[num].videoID,'File do not exist!');
 									request({url: getDlUrl, jar:cookiejar}, function (error, response, body) {
-										linksAndTitles[i].dlURL = body;
-										fs.writeFileSync('json/new/' + linksAndTitles[i].type + '-' + linksAndTitles[i].date + '-' + linksAndTitles[i].videoID + '.json', JSON.stringify(linksAndTitles[i]));
+										linksAndTitles[num].dlURL = body;
+										fs.writeFileSync('json/new/' + linksAndTitles[num].type + '-' + linksAndTitles[num].date + '-' + linksAndTitles[num].videoID + '.json', JSON.stringify(linksAndTitles[num]));
 									})
 								}
 								else {
 									// True: We do nothing as the file is already created
-									console.log(linksAndTitles[i].videoID,'File exist!');
+									console.log(linksAndTitles[num].videoID,'File exist!');
 								}
 							}
 						},200);
