@@ -29,8 +29,10 @@ Officially supported use cases
 To be sure that most users will have a bugfree and painless experience, I do my best to test this app on common use cases and track any issues that can occurs.
 Here is a subjective list of tested use cases, always updated to the latest versions available:
 
- - Debian 8 (x64), NodeJS 6 LTS and Plex
+ - Debian 8/9 (x64), NodeJS 6 LTS and Plex
+ - Debian 8/9 (x64), NodeJS 8 LTS and Plex
  - Windows 10 (Pro x64 & Home x86), NodeJS 6 LTS and Plex
+ - Windows 10 (Pro x64 & Home x86), NodeJS 8 LTS and Plex
 
 Contributing
 ------------

@@ -1,6 +1,6 @@
 {
   "name": "floatplane-downloader",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A tool that automatically download new LTT videos from Floatplane Club and parse them for Plex.",
   "main": "index.js",
   "scripts": {
@@ -16,12 +16,11 @@
   },
   "license": "GPL-3.0",
   "dependencies": {
-    "async": "^2.4.1",
+    "async": "^2.6.0",
     "cheerio": "^0.22.0",
-    "ffmpeg-static": "^2.0.0",
+    "ffmpeg-static": "^2.1.0",
     "fluent-ffmpeg": "^2.1.2",
     "progress": "^2.0.0",
-    "request": "^2.81.0",
-    "sleep": "^5.1.1"
+    "request": "^2.83.0"
   }
 }
