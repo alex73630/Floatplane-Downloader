@@ -2,8 +2,10 @@
 	"auth": "",
 	"password": "",
 	"videoQuality": "720",
-	"plexFolder": "/home/plex/medias/floaplaneclub/",
+	"plexFolder": "",
 	"lttFolderName": "Linus Tech Tips/",
 	"tqFolderName": "Techquickie/",
-	"csfFolderName": "Channel Super Fun/"
+	"csfFolderName": "Channel Super Fun/",
+	"fpeFolderName": "Floatplane Exclusive/", //NOT WORKING YET
+	"tlFolderName": "Tech Linked/"
 }

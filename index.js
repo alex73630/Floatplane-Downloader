@@ -100,11 +100,17 @@ function getFloatplanePage() {
 
 							// Video Type
 							regType = new RegExp(/\w+(?=:)/);
+							regTypeAlt = new RegExp(/\w+(?=])/);
+							regTypeAlt2 = new RegExp(/\w+(?="E")/);
 							function parsingType(){
-								if (regType.exec(title) === null || regType.exec(title) === undefined){return 'Unknown'}
-								else {
+//Changed this so that [TL] works. Having trouble with FP exclusives -Joshua
+								 if (regType.exec(title) != null){return regType.exec(title)[0]}
+							  else if (regTypeAlt.exec(title) != null){return regTypeAlt.exec(title)[0]}
+                 else if (regTypeAlt2.exec(title) != null){return regTypeAlt2.exec(title)[0]}
+								else if (regType.exec(title) === null || regType.exec(title) === undefined || regTypeAlt.exec(title) === null || regTypeAlt.exec(title) === undefined || regTypeAlt2.exec(title) === null || regTypeAlt2.exec(title) === undefined){return 'Unknown'}
+								/*else {
 									return regType.exec(title)[0];
-								}}
+								}*/}
 							parsedType = parsingType();
 
 							// Post URL
@@ -196,6 +202,10 @@ function parseTypeForTitle(type){
 		return "Channel Super Fun"
 	} else if (type == "TQ") {
 		return "Techquickie"
+	} else if (type == "FP "){
+		return "FP Exclusive"
+	} else if (type == "TL"){
+		return "Tech Linked"
 	}
 }
 function videoTypeFolderFun(type) {
@@ -205,6 +215,10 @@ function videoTypeFolderFun(type) {
 		return config.csfFolderName
 	} else if (type == "TQ") {
 		return config.tqFolderName
+	} else if (type == "FP "){
+		return config.fpeFolderName
+	} else if (type == "TL"){
+		return config.tlFolderName
 	}
 }
 
