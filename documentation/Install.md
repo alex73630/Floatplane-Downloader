@@ -3,7 +3,7 @@ Installing
 #### Windows
 If you have not installed required programs, do it in first :
 
-> Placeholder: Links to download softwares for windows
+>[Node js](https://nodejs.org/en/download/)
 
 Open a CMD/PowerShell window where you want to install the program
 
